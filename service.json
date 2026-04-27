@@ -4,6 +4,10 @@
   "description": "Release-backed Traefik edge/router service for Service Lasso baseline routing.",
   "version": "0.1.0",
   "enabled": true,
+  "depend_on": [
+    "localcert",
+    "nginx"
+  ],
   "ports": {
     "web": 19080,
     "websecure": 19443,
