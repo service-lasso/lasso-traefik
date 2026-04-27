@@ -180,6 +180,10 @@ if (
   throw new Error(`Traefik service.json must declare HTTP /ping readiness: ${JSON.stringify(serviceManifest.healthcheck)}`);
 }
 
+if (JSON.stringify(serviceManifest.depend_on) !== JSON.stringify(["localcert", "nginx"])) {
+  throw new Error(`Traefik service.json dependencies drifted: ${JSON.stringify(serviceManifest.depend_on)}`);
+}
+
 const expectedEnv = {
   TRAEFIK_HTTP_PORT: "${WEB_PORT}",
   TRAEFIK_HTTPS_PORT: "${WEBSECURE_PORT}",
