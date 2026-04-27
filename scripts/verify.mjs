@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { packageTraefik } from "./package.mjs";
@@ -95,6 +95,17 @@ await rm(verifyRoot, { recursive: true, force: true });
 await mkdir(extractRoot, { recursive: true });
 await mkdir(runtimeRoot, { recursive: true });
 await run("tar", ["-xf", artifact, "-C", extractRoot]);
+const packageMetadata = JSON.parse(
+  await readFile(path.join(extractRoot, "SERVICE-LASSO-PACKAGE.json"), "utf8"),
+);
+if (
+  packageMetadata.serviceId !== "@traefik" ||
+  packageMetadata.upstream?.repo !== "traefik/traefik" ||
+  packageMetadata.packagedBy !== "service-lasso/lasso-traefik" ||
+  packageMetadata.platform !== platform
+) {
+  throw new Error(`Unexpected package metadata: ${JSON.stringify(packageMetadata)}`);
+}
 await run(binaryPath, ["version"]);
 
 await writeFile(
