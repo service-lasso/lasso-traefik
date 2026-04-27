@@ -45,6 +45,55 @@ async function reserveLoopbackPort() {
   });
 }
 
+function parseCommandlineArgs(commandline) {
+  const args = [];
+  let current = "";
+  let quote = null;
+  let escaping = false;
+
+  for (const char of commandline.trim()) {
+    if (escaping) {
+      current += char;
+      escaping = false;
+      continue;
+    }
+
+    if (char === "\\" && quote === "\"") {
+      escaping = true;
+      continue;
+    }
+
+    if ((char === "\"" || char === "'") && (!quote || quote === char)) {
+      quote = quote ? null : char;
+      continue;
+    }
+
+    if (!quote && /\s/.test(char)) {
+      if (current) {
+        args.push(current);
+        current = "";
+      }
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (escaping) {
+    current += "\\";
+  }
+
+  if (quote) {
+    throw new Error(`Unclosed quote in commandline: ${commandline}`);
+  }
+
+  if (current) {
+    args.push(current);
+  }
+
+  return args;
+}
+
 async function waitForOk(url, timeoutMs = 20_000) {
   const startedAt = Date.now();
   let lastError = null;
@@ -88,8 +137,6 @@ const extractRoot = path.join(verifyRoot, "extract");
 const runtimeRoot = path.join(extractRoot, "runtime");
 const binary = platform === "win32" ? "traefik.exe" : "traefik";
 const binaryPath = path.join(extractRoot, binary);
-const adminPort = await reserveLoopbackPort();
-const webPort = await reserveLoopbackPort();
 const serviceManifest = JSON.parse(await readFile(path.join(repoRoot, "service.json"), "utf8"));
 const expectedPorts = {
   web: 19080,
@@ -120,6 +167,10 @@ const expectedPortmapping = {
   TCP_MOGNO: "${MONGO_PORT}",
   TCP_TYPEDB: "${TYPEDB_PORT}",
 };
+const resolvedPorts = Object.fromEntries(
+  await Promise.all(Object.keys(expectedPorts).map(async (name) => [name, await reserveLoopbackPort()])),
+);
+const adminPort = resolvedPorts.admin;
 
 if (
   serviceManifest.healthcheck?.type !== "http" ||
@@ -172,6 +223,29 @@ if (JSON.stringify(serviceManifest.globalenv) !== JSON.stringify(expectedGlobalE
   throw new Error(`Traefik service.json globalenv drifted: ${JSON.stringify(serviceManifest.globalenv)}`);
 }
 
+const commandline = serviceManifest.commandline?.[platform] ?? serviceManifest.commandline?.default;
+if (!commandline || typeof commandline !== "string") {
+  throw new Error(`Traefik service.json must declare a ${platform}/default commandline.`);
+}
+
+for (const requiredFlag of [
+  "--providers.file.filename=",
+  "--api.insecure=true",
+  "--api.dashboard=true",
+  "--entryPoints.web.address=",
+  "--entryPoints.websecure.address=",
+  "--entryPoints.traefik.address=",
+  "--entryPoints.mongo.address=",
+  "--entryPoints.typedb.address=",
+  "--ping=true",
+  "--ping.entryPoint=traefik",
+  "--serversTransport.insecureSkipVerify=true",
+]) {
+  if (!commandline.includes(requiredFlag)) {
+    throw new Error(`Traefik commandline is missing ${requiredFlag}: ${commandline}`);
+  }
+}
+
 for (const selector of [
   "${WEBSECURE_PORT}",
   "${HTTPS_TRAEFIK_PORT}",
@@ -212,30 +286,19 @@ await writeFile(
   "http:\n  routers: {}\n  services: {}\n",
   "utf8",
 );
-await writeFile(
-  path.join(runtimeRoot, "traefik.yml"),
-  [
-    "entryPoints:",
-    "  web:",
-    `    address: \"127.0.0.1:${webPort}\"`,
-    "  traefik:",
-    `    address: \"127.0.0.1:${adminPort}\"`,
-    "api:",
-    "  dashboard: true",
-    "ping:",
-    "  entryPoint: traefik",
-    "providers:",
-    "  file:",
-    "    filename: \"./runtime/dynamic.yml\"",
-    "    watch: true",
-    "log:",
-    "  level: INFO",
-    "",
-  ].join("\n"),
-  "utf8",
-);
 
-const traefik = spawn(binaryPath, ["--configFile=runtime/traefik.yml"], {
+const selectorValues = {
+  SERVICE_ROOT: extractRoot,
+  ...Object.fromEntries(
+    Object.entries(resolvedPorts).map(([name, value]) => [
+      `${name.replace(/[^A-Za-z0-9]+/g, "_").toUpperCase()}_PORT`,
+      String(value),
+    ]),
+  ),
+};
+const renderedCommandline = commandline.replace(/\$\{([^}]+)\}/g, (match, key) => selectorValues[key] ?? match);
+const args = parseCommandlineArgs(renderedCommandline);
+const traefik = spawn(binaryPath, args, {
   cwd: extractRoot,
   stdio: ["ignore", "pipe", "pipe"],
   windowsHide: true,
