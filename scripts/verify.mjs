@@ -106,6 +106,20 @@ const expectedPorts = {
   mongo: 19160,
   typedb: 19170,
 };
+const expectedPortmapping = {
+  HTTP: "${WEB_PORT}",
+  HTTPS: "${WEBSECURE_PORT}",
+  HTTPS_TRAEFIK: "${HTTPS_TRAEFIK_PORT}",
+  HTTPS_NGINX: "${HTTPS_NGINX_PORT}",
+  HTTPS_CMS: "${HTTPS_CMS_PORT}",
+  HTTPS_FLOW: "${HTTPS_FLOW_PORT}",
+  HTTPS_FLOWTMS: "${HTTPS_FLOWTMS_PORT}",
+  HTTPS_API: "${HTTPS_API_PORT}",
+  HTTPS_FILES: "${HTTPS_FILES_PORT}",
+  HTTPS_BPMN: "${HTTPS_BPMN_PORT}",
+  TCP_MOGNO: "${MONGO_PORT}",
+  TCP_TYPEDB: "${TYPEDB_PORT}",
+};
 
 if (
   serviceManifest.healthcheck?.type !== "http" ||
@@ -144,6 +158,10 @@ const expectedGlobalEnv = {
 
 if (JSON.stringify(serviceManifest.ports) !== JSON.stringify(expectedPorts)) {
   throw new Error(`Traefik service.json ports drifted: ${JSON.stringify(serviceManifest.ports)}`);
+}
+
+if (JSON.stringify(serviceManifest.portmapping) !== JSON.stringify(expectedPortmapping)) {
+  throw new Error(`Traefik service.json portmapping drifted: ${JSON.stringify(serviceManifest.portmapping)}`);
 }
 
 if (JSON.stringify(serviceManifest.env) !== JSON.stringify(expectedEnv)) {
