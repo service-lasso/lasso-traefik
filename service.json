@@ -8,6 +8,24 @@
     "web": 19080,
     "admin": 19081
   },
+  "env": {
+    "TRAEFIK_HTTP_PORT": "${WEB_PORT}",
+    "TRAEFIK_INTERNAL_PORT": "${ADMIN_PORT}",
+    "TRAEFIK_WEB_URL": "http://127.0.0.1:${WEB_PORT}/",
+    "TRAEFIK_DASHBOARD_URL": "http://127.0.0.1:${ADMIN_PORT}/dashboard/",
+    "TRAEFIK_PING_URL": "http://127.0.0.1:${ADMIN_PORT}/ping"
+  },
+  "globalenv": {
+    "TRAEFIK_HTTP_PORT": "${WEB_PORT}",
+    "TRAEFIK_INTERNAL_PORT": "${ADMIN_PORT}",
+    "TRAEFIK_WEB_URL": "http://127.0.0.1:${WEB_PORT}/",
+    "TRAEFIK_DASHBOARD_URL": "http://127.0.0.1:${ADMIN_PORT}/dashboard/",
+    "TRAEFIK_PING_URL": "http://127.0.0.1:${ADMIN_PORT}/ping",
+    "TRAEFIK_TRAEFIK_URL": "http://127.0.0.1:${ADMIN_PORT}/dashboard/",
+    "TRAEFIK_HOST_DOMAIN": "localhost",
+    "TRAEFIK_HOST_DOMAIN_URL": "localhost",
+    "TRAEFIK_HOST_DOMAIN_SUFFIX": "localhost"
+  },
   "urls": [
     {
       "label": "dashboard",

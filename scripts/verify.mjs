@@ -100,6 +100,29 @@ if (
   throw new Error(`Traefik service.json must declare HTTP /ping readiness: ${JSON.stringify(serviceManifest.healthcheck)}`);
 }
 
+const expectedEnv = {
+  TRAEFIK_HTTP_PORT: "${WEB_PORT}",
+  TRAEFIK_INTERNAL_PORT: "${ADMIN_PORT}",
+  TRAEFIK_WEB_URL: "http://127.0.0.1:${WEB_PORT}/",
+  TRAEFIK_DASHBOARD_URL: "http://127.0.0.1:${ADMIN_PORT}/dashboard/",
+  TRAEFIK_PING_URL: "http://127.0.0.1:${ADMIN_PORT}/ping",
+};
+const expectedGlobalEnv = {
+  ...expectedEnv,
+  TRAEFIK_TRAEFIK_URL: "http://127.0.0.1:${ADMIN_PORT}/dashboard/",
+  TRAEFIK_HOST_DOMAIN: "localhost",
+  TRAEFIK_HOST_DOMAIN_URL: "localhost",
+  TRAEFIK_HOST_DOMAIN_SUFFIX: "localhost",
+};
+
+if (JSON.stringify(serviceManifest.env) !== JSON.stringify(expectedEnv)) {
+  throw new Error(`Traefik service.json env drifted: ${JSON.stringify(serviceManifest.env)}`);
+}
+
+if (JSON.stringify(serviceManifest.globalenv) !== JSON.stringify(expectedGlobalEnv)) {
+  throw new Error(`Traefik service.json globalenv drifted: ${JSON.stringify(serviceManifest.globalenv)}`);
+}
+
 await rm(verifyRoot, { recursive: true, force: true });
 await mkdir(extractRoot, { recursive: true });
 await mkdir(runtimeRoot, { recursive: true });

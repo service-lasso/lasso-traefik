@@ -62,4 +62,5 @@ The service manifest declares:
 - generated Traefik static config under `runtime/traefik.yml`
 - a lightweight dynamic config placeholder under `runtime/dynamic.yml`
 - dashboard/ping and web entrypoint ports
+- local `env` and shared `globalenv` outputs for Traefik ports and URLs
 - HTTP health for Service Lasso lifecycle readiness via the Traefik admin `/ping` endpoint
