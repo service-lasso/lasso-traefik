@@ -6,19 +6,54 @@
   "enabled": true,
   "ports": {
     "web": 19080,
-    "admin": 19081
+    "websecure": 19443,
+    "admin": 19081,
+    "https_traefik": 19082,
+    "https_nginx": 19090,
+    "https_cms": 19100,
+    "https_flow": 19110,
+    "https_flowtms": 19120,
+    "https_api": 19130,
+    "https_files": 19140,
+    "https_bpmn": 19150,
+    "mongo": 19160,
+    "typedb": 19170
   },
   "env": {
     "TRAEFIK_HTTP_PORT": "${WEB_PORT}",
+    "TRAEFIK_HTTPS_PORT": "${WEBSECURE_PORT}",
     "TRAEFIK_INTERNAL_PORT": "${ADMIN_PORT}",
+    "TRAEFIK_HTTPS_TRAEFIK_PORT": "${HTTPS_TRAEFIK_PORT}",
+    "TRAEFIK_HTTPS_NGINX_PORT": "${HTTPS_NGINX_PORT}",
+    "TRAEFIK_HTTPS_CMS_PORT": "${HTTPS_CMS_PORT}",
+    "TRAEFIK_HTTPS_FLOW_PORT": "${HTTPS_FLOW_PORT}",
+    "TRAEFIK_HTTPS_FLOWTMS_PORT": "${HTTPS_FLOWTMS_PORT}",
+    "TRAEFIK_HTTPS_API_PORT": "${HTTPS_API_PORT}",
+    "TRAEFIK_HTTPS_FILES_PORT": "${HTTPS_FILES_PORT}",
+    "TRAEFIK_HTTPS_BPMN_PORT": "${HTTPS_BPMN_PORT}",
+    "TRAEFIK_MONGO_PORT": "${MONGO_PORT}",
+    "TRAEFIK_TYPEDB_PORT": "${TYPEDB_PORT}",
     "TRAEFIK_WEB_URL": "http://127.0.0.1:${WEB_PORT}/",
+    "TRAEFIK_WEBSECURE_URL": "https://127.0.0.1:${WEBSECURE_PORT}/",
     "TRAEFIK_DASHBOARD_URL": "http://127.0.0.1:${ADMIN_PORT}/dashboard/",
     "TRAEFIK_PING_URL": "http://127.0.0.1:${ADMIN_PORT}/ping"
   },
   "globalenv": {
     "TRAEFIK_HTTP_PORT": "${WEB_PORT}",
+    "TRAEFIK_HTTPS_PORT": "${WEBSECURE_PORT}",
     "TRAEFIK_INTERNAL_PORT": "${ADMIN_PORT}",
+    "TRAEFIK_HTTPS_TRAEFIK_PORT": "${HTTPS_TRAEFIK_PORT}",
+    "TRAEFIK_HTTPS_NGINX_PORT": "${HTTPS_NGINX_PORT}",
+    "TRAEFIK_HTTPS_CMS_PORT": "${HTTPS_CMS_PORT}",
+    "TRAEFIK_HTTPS_FLOW_PORT": "${HTTPS_FLOW_PORT}",
+    "TRAEFIK_HTTPS_FLOWTMS_PORT": "${HTTPS_FLOWTMS_PORT}",
+    "TRAEFIK_HTTPS_API_PORT": "${HTTPS_API_PORT}",
+    "TRAEFIK_HTTPS_FILES_PORT": "${HTTPS_FILES_PORT}",
+    "TRAEFIK_HTTPS_BPMN_PORT": "${HTTPS_BPMN_PORT}",
+    "TRAEFIK_MONGO_PORT": "${MONGO_PORT}",
+    "TRAEFIK_TYPEDB_PORT": "${TYPEDB_PORT}",
     "TRAEFIK_WEB_URL": "http://127.0.0.1:${WEB_PORT}/",
+    "TRAEFIK_WEBSECURE_URL": "https://127.0.0.1:${WEBSECURE_PORT}/",
     "TRAEFIK_DASHBOARD_URL": "http://127.0.0.1:${ADMIN_PORT}/dashboard/",
     "TRAEFIK_PING_URL": "http://127.0.0.1:${ADMIN_PORT}/ping",
     "TRAEFIK_TRAEFIK_URL": "http://127.0.0.1:${ADMIN_PORT}/dashboard/",
@@ -37,11 +72,16 @@
       "url": "http://127.0.0.1:${ADMIN_PORT}/ping",
       "kind": "local"
     },
-    {
-      "label": "web",
-      "url": "http://127.0.0.1:${WEB_PORT}/",
-      "kind": "local"
-    }
+      {
+        "label": "web",
+        "url": "http://127.0.0.1:${WEB_PORT}/",
+        "kind": "local"
+      },
+      {
+        "label": "websecure",
+        "url": "https://127.0.0.1:${WEBSECURE_PORT}/",
+        "kind": "local"
+      }
   ],
   "artifact": {
     "kind": "archive",
@@ -83,7 +123,7 @@
     "files": [
       {
         "path": "./runtime/traefik.yml",
-        "content": "entryPoints:\n  web:\n    address: \"127.0.0.1:${WEB_PORT}\"\n  traefik:\n    address: \"127.0.0.1:${ADMIN_PORT}\"\napi:\n  dashboard: true\nping:\n  entryPoint: traefik\nproviders:\n  file:\n    filename: \"./runtime/dynamic.yml\"\n    watch: true\nlog:\n  level: INFO\n"
+        "content": "entryPoints:\n  web:\n    address: \"127.0.0.1:${WEB_PORT}\"\n  websecure:\n    address: \"127.0.0.1:${WEBSECURE_PORT}\"\n  traefik:\n    address: \"127.0.0.1:${ADMIN_PORT}\"\n  httpsTraefik:\n    address: \"127.0.0.1:${HTTPS_TRAEFIK_PORT}\"\n  httpsNginx:\n    address: \"127.0.0.1:${HTTPS_NGINX_PORT}\"\n  httpsCms:\n    address: \"127.0.0.1:${HTTPS_CMS_PORT}\"\n  httpsFlow:\n    address: \"127.0.0.1:${HTTPS_FLOW_PORT}\"\n  httpsFlowtms:\n    address: \"127.0.0.1:${HTTPS_FLOWTMS_PORT}\"\n  httpsApi:\n    address: \"127.0.0.1:${HTTPS_API_PORT}\"\n  httpsFiles:\n    address: \"127.0.0.1:${HTTPS_FILES_PORT}\"\n  httpsBpmn:\n    address: \"127.0.0.1:${HTTPS_BPMN_PORT}\"\n  mongo:\n    address: \"127.0.0.1:${MONGO_PORT}\"\n  typedb:\n    address: \"127.0.0.1:${TYPEDB_PORT}\"\napi:\n  dashboard: true\nping:\n  entryPoint: traefik\nproviders:\n  file:\n    filename: \"./runtime/dynamic.yml\"\n    watch: true\nlog:\n  level: INFO\n"
       }
     ]
   },

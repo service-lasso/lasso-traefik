@@ -91,6 +91,21 @@ const binaryPath = path.join(extractRoot, binary);
 const adminPort = await reserveLoopbackPort();
 const webPort = await reserveLoopbackPort();
 const serviceManifest = JSON.parse(await readFile(path.join(repoRoot, "service.json"), "utf8"));
+const expectedPorts = {
+  web: 19080,
+  websecure: 19443,
+  admin: 19081,
+  https_traefik: 19082,
+  https_nginx: 19090,
+  https_cms: 19100,
+  https_flow: 19110,
+  https_flowtms: 19120,
+  https_api: 19130,
+  https_files: 19140,
+  https_bpmn: 19150,
+  mongo: 19160,
+  typedb: 19170,
+};
 
 if (
   serviceManifest.healthcheck?.type !== "http" ||
@@ -102,8 +117,20 @@ if (
 
 const expectedEnv = {
   TRAEFIK_HTTP_PORT: "${WEB_PORT}",
+  TRAEFIK_HTTPS_PORT: "${WEBSECURE_PORT}",
   TRAEFIK_INTERNAL_PORT: "${ADMIN_PORT}",
+  TRAEFIK_HTTPS_TRAEFIK_PORT: "${HTTPS_TRAEFIK_PORT}",
+  TRAEFIK_HTTPS_NGINX_PORT: "${HTTPS_NGINX_PORT}",
+  TRAEFIK_HTTPS_CMS_PORT: "${HTTPS_CMS_PORT}",
+  TRAEFIK_HTTPS_FLOW_PORT: "${HTTPS_FLOW_PORT}",
+  TRAEFIK_HTTPS_FLOWTMS_PORT: "${HTTPS_FLOWTMS_PORT}",
+  TRAEFIK_HTTPS_API_PORT: "${HTTPS_API_PORT}",
+  TRAEFIK_HTTPS_FILES_PORT: "${HTTPS_FILES_PORT}",
+  TRAEFIK_HTTPS_BPMN_PORT: "${HTTPS_BPMN_PORT}",
+  TRAEFIK_MONGO_PORT: "${MONGO_PORT}",
+  TRAEFIK_TYPEDB_PORT: "${TYPEDB_PORT}",
   TRAEFIK_WEB_URL: "http://127.0.0.1:${WEB_PORT}/",
+  TRAEFIK_WEBSECURE_URL: "https://127.0.0.1:${WEBSECURE_PORT}/",
   TRAEFIK_DASHBOARD_URL: "http://127.0.0.1:${ADMIN_PORT}/dashboard/",
   TRAEFIK_PING_URL: "http://127.0.0.1:${ADMIN_PORT}/ping",
 };
@@ -115,12 +142,34 @@ const expectedGlobalEnv = {
   TRAEFIK_HOST_DOMAIN_SUFFIX: "localhost",
 };
 
+if (JSON.stringify(serviceManifest.ports) !== JSON.stringify(expectedPorts)) {
+  throw new Error(`Traefik service.json ports drifted: ${JSON.stringify(serviceManifest.ports)}`);
+}
+
 if (JSON.stringify(serviceManifest.env) !== JSON.stringify(expectedEnv)) {
   throw new Error(`Traefik service.json env drifted: ${JSON.stringify(serviceManifest.env)}`);
 }
 
 if (JSON.stringify(serviceManifest.globalenv) !== JSON.stringify(expectedGlobalEnv)) {
   throw new Error(`Traefik service.json globalenv drifted: ${JSON.stringify(serviceManifest.globalenv)}`);
+}
+
+for (const selector of [
+  "${WEBSECURE_PORT}",
+  "${HTTPS_TRAEFIK_PORT}",
+  "${HTTPS_NGINX_PORT}",
+  "${HTTPS_CMS_PORT}",
+  "${HTTPS_FLOW_PORT}",
+  "${HTTPS_FLOWTMS_PORT}",
+  "${HTTPS_API_PORT}",
+  "${HTTPS_FILES_PORT}",
+  "${HTTPS_BPMN_PORT}",
+  "${MONGO_PORT}",
+  "${TYPEDB_PORT}",
+]) {
+  if (!serviceManifest.config?.files?.[0]?.content?.includes(selector)) {
+    throw new Error(`Traefik config is missing entrypoint selector ${selector}`);
+  }
 }
 
 await rm(verifyRoot, { recursive: true, force: true });
