@@ -2,6 +2,8 @@
   "name": "lasso-traefik",
   "version": "0.1.0",
   "private": true,
+  "description": "Release-backed Traefik service package for Service Lasso.",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "package": "node scripts/package.mjs",
