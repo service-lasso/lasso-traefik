@@ -70,6 +70,10 @@
     ]
   },
   "healthcheck": {
-    "type": "process"
+    "type": "http",
+    "url": "http://127.0.0.1:${ADMIN_PORT}/ping",
+    "expected_status": 200,
+    "retries": 80,
+    "interval": 250
   }
 }

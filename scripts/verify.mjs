@@ -90,6 +90,15 @@ const binary = platform === "win32" ? "traefik.exe" : "traefik";
 const binaryPath = path.join(extractRoot, binary);
 const adminPort = await reserveLoopbackPort();
 const webPort = await reserveLoopbackPort();
+const serviceManifest = JSON.parse(await readFile(path.join(repoRoot, "service.json"), "utf8"));
+
+if (
+  serviceManifest.healthcheck?.type !== "http" ||
+  serviceManifest.healthcheck.url !== "http://127.0.0.1:${ADMIN_PORT}/ping" ||
+  serviceManifest.healthcheck.expected_status !== 200
+) {
+  throw new Error(`Traefik service.json must declare HTTP /ping readiness: ${JSON.stringify(serviceManifest.healthcheck)}`);
+}
 
 await rm(verifyRoot, { recursive: true, force: true });
 await mkdir(extractRoot, { recursive: true });
