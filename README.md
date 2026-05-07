@@ -2,6 +2,8 @@
 
 `lasso-traefik` is the canonical Service Lasso service repo for packaging Traefik as a release-backed baseline service.
 
+This repo is aligned to the current `service-lasso/service-template` baseline first, then specialized for Traefik-specific packaging and service configuration. See [`docs/template-alignment.md`](docs/template-alignment.md) for the preserved baseline structure and the intentionally different Traefik files.
+
 The repo does not fork Traefik. It downloads the official Traefik binary release, wraps it in Service Lasso-compatible platform archives, and publishes those archives from protected `main` pushes using the project version pattern:
 
 ```text
@@ -52,7 +54,21 @@ Each platform archive contains:
 npm test
 ```
 
-This packages the current platform, extracts the archive, runs `traefik --version`, starts Traefik with a temporary ping-enabled config, checks `/ping`, and shuts the process down.
+Template-shaped wrappers are also present:
+
+```powershell
+.\scripts\package.ps1
+.\scripts\test.ps1
+.\scripts\verify.ps1
+```
+
+```bash
+bash ./scripts/package.sh
+bash ./scripts/test.sh
+bash ./scripts/verify.sh
+```
+
+These commands package the current/target platform, extract the archive, run `traefik --version`, start Traefik with a temporary ping-enabled config, check `/ping`, and shut the process down.
 
 ## Service Lasso Contract
 

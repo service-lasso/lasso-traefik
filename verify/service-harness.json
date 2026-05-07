@@ -1,0 +1,33 @@
+{
+  "serviceId": "@traefik",
+  "artifact": {
+    "path": "dist/lasso-traefik-win32.zip",
+    "kind": "archive"
+  },
+  "dependencies": [
+    "localcert",
+    "nginx"
+  ],
+  "lifecycle": {
+    "install": true,
+    "config": true,
+    "start": true,
+    "stop": true
+  },
+  "health": {
+    "type": "http",
+    "url": "http://127.0.0.1:${ADMIN_PORT}/ping",
+    "expectedStatus": 200,
+    "timeoutSeconds": 30
+  },
+  "expect": {
+    "logs": true,
+    "state": true,
+    "exitClean": true
+  },
+  "artifacts": {
+    "captureLogs": true,
+    "captureState": true,
+    "captureSummary": true
+  }
+}
