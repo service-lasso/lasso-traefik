@@ -77,7 +77,20 @@ The service manifest declares:
 - native archive acquisition from GitHub releases
 - generated Traefik static config under `runtime/traefik.yml`
 - a lightweight dynamic config placeholder under `runtime/dynamic.yml`
+- a protected Service Admin route fixture under `runtime/protected-serviceadmin.example.yml`
 - dashboard/ping, web/websecure, route, Mongo, and TypeDB entrypoint ports
 - Service Lasso `portmapping` labels for those service ports
 - local `env` and shared `globalenv` outputs for all Traefik service ports and URLs
 - HTTP health for Service Lasso lifecycle readiness via the Traefik admin `/ping` endpoint
+
+## Protected route hardening
+
+Protected Service Admin traffic must enter through Traefik at
+`serviceadmin.servicelasso.localhost`. The fixture and validation checks cover
+header stripping for browser-controlled identity headers, `forwardAuth` wiring to
+the OIDC/plugin auth boundary, and fail-closed behavior when auth is unavailable.
+
+Service Lasso core does not own OIDC/session/token/runtime auth in this flow; it
+only wires service config and Secrets Broker refs. See
+[`docs/protected-serviceadmin-routes.md`](docs/protected-serviceadmin-routes.md)
+for the contract and safe local development rules.

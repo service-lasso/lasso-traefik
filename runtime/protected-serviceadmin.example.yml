@@ -1,0 +1,43 @@
+http:
+  routers:
+    serviceadmin-protected:
+      rule: "Host(`serviceadmin.servicelasso.localhost`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - serviceadmin-strip-spoofed-identity
+        - serviceadmin-oidc-auth
+      service: serviceadmin-backend
+      tls: {}
+  middlewares:
+    serviceadmin-strip-spoofed-identity:
+      headers:
+        customRequestHeaders:
+          X-Service-Lasso-User: ""
+          X-Service-Lasso-Workspace: ""
+          X-Service-Lasso-Roles: ""
+          X-Service-Lasso-Actor: ""
+          X-Forwarded-User: ""
+          X-Forwarded-Email: ""
+          X-Auth-Request-User: ""
+          X-Auth-Request-Email: ""
+    serviceadmin-oidc-auth:
+      forwardAuth:
+        address: "http://127.0.0.1:${OIDC_AUTH_PORT}/auth"
+        trustForwardHeader: false
+        authRequestHeaders:
+          - Cookie
+          - Authorization
+          - X-Forwarded-Proto
+          - X-Forwarded-Host
+          - X-Forwarded-Uri
+        authResponseHeaders:
+          - X-Service-Lasso-User
+          - X-Service-Lasso-Workspace
+          - X-Service-Lasso-Roles
+          - X-Service-Lasso-Actor
+  services:
+    serviceadmin-backend:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:${SERVICEADMIN_PORT}"

@@ -138,6 +138,8 @@ const runtimeRoot = path.join(extractRoot, "runtime");
 const binary = platform === "win32" ? "traefik.exe" : "traefik";
 const binaryPath = path.join(extractRoot, binary);
 const serviceManifest = JSON.parse(await readFile(path.join(repoRoot, "service.json"), "utf8"));
+const protectedServiceAdminFixturePath = path.join(repoRoot, "runtime", "protected-serviceadmin.example.yml");
+const protectedServiceAdminFixture = (await readFile(protectedServiceAdminFixturePath, "utf8")).replaceAll("\r\n", "\n");
 const expectedPorts = {
   web: 19080,
   websecure: 19443,
@@ -225,6 +227,53 @@ if (JSON.stringify(serviceManifest.env) !== JSON.stringify(expectedEnv)) {
 
 if (JSON.stringify(serviceManifest.globalenv) !== JSON.stringify(expectedGlobalEnv)) {
   throw new Error(`Traefik service.json globalenv drifted: ${JSON.stringify(serviceManifest.globalenv)}`);
+}
+
+const installedProtectedRouteFixture = serviceManifest.install?.files?.find(
+  (file) => file.path === "./runtime/protected-serviceadmin.example.yml",
+);
+if (!installedProtectedRouteFixture) {
+  throw new Error("Traefik service.json must install the protected Service Admin route fixture.");
+}
+if (installedProtectedRouteFixture.content !== protectedServiceAdminFixture) {
+  throw new Error("Installed protected Service Admin route fixture drifted from runtime/protected-serviceadmin.example.yml.");
+}
+
+for (const requiredText of [
+  "Host(`serviceadmin.servicelasso.localhost`)",
+  "serviceadmin-strip-spoofed-identity",
+  "serviceadmin-oidc-auth",
+  "forwardAuth:",
+  "trustForwardHeader: false",
+  "authRequestHeaders:",
+  "authResponseHeaders:",
+  "X-Service-Lasso-User: \"\"",
+  "X-Service-Lasso-Workspace: \"\"",
+  "X-Service-Lasso-Roles: \"\"",
+  "X-Service-Lasso-Actor: \"\"",
+  "X-Forwarded-User: \"\"",
+  "X-Auth-Request-User: \"\"",
+  "http://127.0.0.1:${OIDC_AUTH_PORT}/auth",
+  "http://127.0.0.1:${SERVICEADMIN_PORT}",
+]) {
+  if (!protectedServiceAdminFixture.includes(requiredText)) {
+    throw new Error(`Protected Service Admin route fixture is missing ${requiredText}`);
+  }
+}
+
+if (/serviceadmin\.servicelasso\.local(?!host)/.test(protectedServiceAdminFixture)) {
+  throw new Error("Protected Service Admin route fixture must use servicelasso.localhost, not .local.");
+}
+
+for (const forbiddenSnippet of [
+  "X-Service-Lasso-User: spoof",
+  "X-Service-Lasso-Workspace: spoof",
+  "Authorization: \"\"",
+  "Cookie: \"\"",
+]) {
+  if (protectedServiceAdminFixture.includes(forbiddenSnippet)) {
+    throw new Error(`Protected Service Admin route fixture contains unsafe header behavior: ${forbiddenSnippet}`);
+  }
 }
 
 const commandline = serviceManifest.commandline?.[platform] ?? serviceManifest.commandline?.default;
