@@ -140,6 +140,10 @@
       {
         "path": "./runtime/dynamic.yml",
         "content": "http:\n  routers: {}\n  services: {}\n"
+      },
+      {
+        "path": "./runtime/protected-serviceadmin.example.yml",
+        "content": "http:\n  routers:\n    serviceadmin-protected:\n      rule: \"Host(`serviceadmin.servicelasso.localhost`)\"\n      entryPoints:\n        - websecure\n      middlewares:\n        - serviceadmin-strip-spoofed-identity\n        - serviceadmin-oidc-auth\n      service: serviceadmin-backend\n      tls: {}\n  middlewares:\n    serviceadmin-strip-spoofed-identity:\n      headers:\n        customRequestHeaders:\n          X-Service-Lasso-User: \"\"\n          X-Service-Lasso-Workspace: \"\"\n          X-Service-Lasso-Roles: \"\"\n          X-Service-Lasso-Actor: \"\"\n          X-Forwarded-User: \"\"\n          X-Forwarded-Email: \"\"\n          X-Auth-Request-User: \"\"\n          X-Auth-Request-Email: \"\"\n    serviceadmin-oidc-auth:\n      forwardAuth:\n        address: \"http://127.0.0.1:${OIDC_AUTH_PORT}/auth\"\n        trustForwardHeader: false\n        authRequestHeaders:\n          - Cookie\n          - Authorization\n          - X-Forwarded-Proto\n          - X-Forwarded-Host\n          - X-Forwarded-Uri\n        authResponseHeaders:\n          - X-Service-Lasso-User\n          - X-Service-Lasso-Workspace\n          - X-Service-Lasso-Roles\n          - X-Service-Lasso-Actor\n  services:\n    serviceadmin-backend:\n      loadBalancer:\n        servers:\n          - url: \"http://127.0.0.1:${SERVICEADMIN_PORT}\"\n"
       }
     ]
   },
