@@ -140,6 +140,8 @@ const binaryPath = path.join(extractRoot, binary);
 const serviceManifest = JSON.parse(await readFile(path.join(repoRoot, "service.json"), "utf8"));
 const protectedServiceAdminFixturePath = path.join(repoRoot, "runtime", "protected-serviceadmin.example.yml");
 const protectedServiceAdminFixture = (await readFile(protectedServiceAdminFixturePath, "utf8")).replaceAll("\r\n", "\n");
+const ssoIngressFixturePath = path.join(repoRoot, "runtime", "servicelasso-sso-ingress.example.yml");
+const ssoIngressFixture = (await readFile(ssoIngressFixturePath, "utf8")).replaceAll("\r\n", "\n");
 const expectedPorts = {
   web: 19080,
   websecure: 19443,
@@ -273,6 +275,48 @@ for (const forbiddenSnippet of [
 ]) {
   if (protectedServiceAdminFixture.includes(forbiddenSnippet)) {
     throw new Error(`Protected Service Admin route fixture contains unsafe header behavior: ${forbiddenSnippet}`);
+  }
+}
+
+for (const requiredText of [
+  "Host(`serviceadmin.servicelasso.localhost`)",
+  "Host(`auth.servicelasso.localhost`) && PathPrefix(`/oauth2/callback`)",
+  "Host(`auth.servicelasso.localhost`) && PathPrefix(`/logout`)",
+  "Host(`zitadel.servicelasso.localhost`)",
+  "servicelasso-strip-spoofed-identity",
+  "servicelasso-forward-auth",
+  "servicelasso-auth-redirect-allowlist",
+  "servicelasso-secure-cookie-headers",
+  "address: \"http://127.0.0.1:${AUTH_FACADE_PORT}/forward-auth\"",
+  "trustForwardHeader: false",
+  "X-ServiceLasso-User-ID: \"\"",
+  "X-ServiceLasso-Workspace-ID: \"\"",
+  "X-ServiceLasso-Audit-Actor: \"\"",
+  "X-ServiceLasso-Allowed-Redirect-Hosts: \"serviceadmin.servicelasso.localhost,auth.servicelasso.localhost,zitadel.servicelasso.localhost\"",
+  "http://127.0.0.1:${SERVICEADMIN_PORT}",
+  "http://127.0.0.1:${AUTH_FACADE_PORT}",
+  "http://127.0.0.1:${ZITADEL_PORT}",
+]) {
+  if (!ssoIngressFixture.includes(requiredText)) {
+    throw new Error(`Service Lasso SSO ingress fixture is missing ${requiredText}`);
+  }
+}
+
+if (/serviceadmin\.servicelasso\.local(?!host)/.test(ssoIngressFixture)) {
+  throw new Error("Service Lasso SSO ingress fixture must use servicelasso.localhost, not .local.");
+}
+
+for (const forbiddenSnippet of [
+  "serviceadmin-bypass",
+  "serviceadmin-unprotected",
+  "trustForwardHeader: true",
+  "Set-Cookie:",
+  "id_token",
+  "access_token",
+  "refresh_token",
+]) {
+  if (ssoIngressFixture.includes(forbiddenSnippet)) {
+    throw new Error(`Service Lasso SSO ingress fixture contains unsafe auth behavior: ${forbiddenSnippet}`);
   }
 }
 
