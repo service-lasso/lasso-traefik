@@ -1,0 +1,100 @@
+http:
+  routers:
+    serviceadmin-sso-protected:
+      rule: "Host(`serviceadmin.servicelasso.localhost`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - servicelasso-strip-spoofed-identity
+        - servicelasso-forward-auth
+        - servicelasso-secure-cookie-headers
+      service: serviceadmin-backend
+      tls: {}
+    auth-facade-callback:
+      rule: "Host(`auth.servicelasso.localhost`) && PathPrefix(`/oauth2/callback`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - servicelasso-strip-spoofed-identity
+        - servicelasso-auth-redirect-allowlist
+        - servicelasso-secure-cookie-headers
+      service: auth-facade-backend
+      tls: {}
+    auth-facade-logout:
+      rule: "Host(`auth.servicelasso.localhost`) && PathPrefix(`/logout`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - servicelasso-auth-redirect-allowlist
+        - servicelasso-secure-cookie-headers
+      service: auth-facade-backend
+      tls: {}
+    zitadel-local:
+      rule: "Host(`zitadel.servicelasso.localhost`)"
+      entryPoints:
+        - websecure
+      service: zitadel-backend
+      tls: {}
+  middlewares:
+    servicelasso-strip-spoofed-identity:
+      headers:
+        customRequestHeaders:
+          X-ServiceLasso-User-ID: ""
+          X-ServiceLasso-Workspace-ID: ""
+          X-ServiceLasso-Instance-ID: ""
+          X-ServiceLasso-Email: ""
+          X-ServiceLasso-Roles: ""
+          X-ServiceLasso-Auth-Method: ""
+          X-ServiceLasso-Audit-Actor: ""
+          X-Service-Lasso-User: ""
+          X-Service-Lasso-Workspace: ""
+          X-Service-Lasso-Roles: ""
+          X-Service-Lasso-Actor: ""
+          X-Forwarded-User: ""
+          X-Forwarded-Email: ""
+          X-Auth-Request-User: ""
+          X-Auth-Request-Email: ""
+    servicelasso-forward-auth:
+      forwardAuth:
+        address: "http://127.0.0.1:${AUTH_FACADE_PORT}/forward-auth"
+        trustForwardHeader: false
+        authRequestHeaders:
+          - Cookie
+          - Authorization
+          - X-Forwarded-Proto
+          - X-Forwarded-Host
+          - X-Forwarded-Uri
+        authResponseHeaders:
+          - X-ServiceLasso-User-ID
+          - X-ServiceLasso-Workspace-ID
+          - X-ServiceLasso-Instance-ID
+          - X-ServiceLasso-Email
+          - X-ServiceLasso-Roles
+          - X-ServiceLasso-Auth-Method
+          - X-ServiceLasso-Audit-Actor
+        tls:
+          insecureSkipVerify: false
+    servicelasso-auth-redirect-allowlist:
+      headers:
+        customRequestHeaders:
+          X-ServiceLasso-Allowed-Redirect-Hosts: "serviceadmin.servicelasso.localhost,auth.servicelasso.localhost,zitadel.servicelasso.localhost"
+    servicelasso-secure-cookie-headers:
+      headers:
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: false
+        browserXssFilter: true
+        contentTypeNosniff: true
+  services:
+    serviceadmin-backend:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:${SERVICEADMIN_PORT}"
+    auth-facade-backend:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:${AUTH_FACADE_PORT}"
+    zitadel-backend:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:${ZITADEL_PORT}"

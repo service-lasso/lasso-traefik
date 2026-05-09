@@ -83,6 +83,8 @@ The service manifest declares:
 - local `env` and shared `globalenv` outputs for all Traefik service ports and URLs
 - HTTP health for Service Lasso lifecycle readiness via the Traefik admin `/ping` endpoint
 
+The repo also includes a broader Traefik + ZITADEL SSO ingress contract fixture under `runtime/servicelasso-sso-ingress.example.yml`.
+
 ## Protected route hardening
 
 Protected Service Admin traffic must enter through Traefik at
@@ -93,4 +95,7 @@ the OIDC/plugin auth boundary, and fail-closed behavior when auth is unavailable
 Service Lasso core does not own OIDC/session/token/runtime auth in this flow; it
 only wires service config and Secrets Broker refs. See
 [`docs/protected-serviceadmin-routes.md`](docs/protected-serviceadmin-routes.md)
-for the contract and safe local development rules.
+for the route-hardening contract and safe local development rules. See
+[`docs/traefik-zitadel-sso-ingress-contract.md`](docs/traefik-zitadel-sso-ingress-contract.md)
+for the broader Traefik + ZITADEL SSO ingress contract, including domain,
+callback, logout, TLS, trusted identity header, and auth failure boundaries.
