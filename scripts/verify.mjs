@@ -197,12 +197,30 @@ const resolvedPorts = Object.fromEntries(
 );
 const adminPort = resolvedPorts.admin;
 
+if ("healthcheck" in serviceManifest) {
+  throw new Error("Traefik service.json must use canonical healthchecks[] instead of singular healthcheck.");
+}
+
+if (!Array.isArray(serviceManifest.healthchecks) || serviceManifest.healthchecks.length !== 1) {
+  throw new Error(`Traefik service.json must declare one canonical healthchecks[] item: ${JSON.stringify(serviceManifest.healthchecks)}`);
+}
+
+const healthcheckIds = new Set();
+for (const healthcheck of serviceManifest.healthchecks) {
+  if (!healthcheck?.id || healthcheckIds.has(healthcheck.id)) {
+    throw new Error(`Traefik service.json healthchecks[] must use stable unique ids: ${JSON.stringify(serviceManifest.healthchecks)}`);
+  }
+  healthcheckIds.add(healthcheck.id);
+}
+
+const [pingHealthcheck] = serviceManifest.healthchecks;
 if (
-  serviceManifest.healthcheck?.type !== "http" ||
-  serviceManifest.healthcheck.url !== "${endpoint.ping.url}" ||
-  serviceManifest.healthcheck.expected_status !== 200
+  pingHealthcheck.id !== "traefik-ping" ||
+  pingHealthcheck.type !== "http" ||
+  pingHealthcheck.url !== "${endpoint.ping.url}" ||
+  pingHealthcheck.expected_status !== 200
 ) {
-  throw new Error(`Traefik service.json must declare HTTP /ping readiness: ${JSON.stringify(serviceManifest.healthcheck)}`);
+  throw new Error(`Traefik service.json must declare HTTP /ping readiness in healthchecks[]: ${JSON.stringify(serviceManifest.healthchecks)}`);
 }
 
 if (JSON.stringify(serviceManifest.depend_on) !== JSON.stringify(["localcert", "nginx"])) {
