@@ -13,7 +13,7 @@ It is meant to make the template usable without forcing service authors to recon
 - `actions`
 - `execconfig`
 - env / dependencies / canonical `endpoints[]`
-- healthcheck direction
+- `healthchecks[]` direction
 - examples
 - what is currently canonical vs still illustrative
 
@@ -100,9 +100,12 @@ The current sample in this repo is:
       "ECHO_MESSAGE": "hello from service-template"
     },
     "depend_on": [],
-    "healthcheck": {
-      "type": "process"
-    }
+    "healthchecks": [
+      {
+        "id": "process-ready",
+        "type": "process"
+      }
+    ]
   }
 }
 ```
@@ -258,7 +261,7 @@ Current direction:
 - use this for services that require another service/runtime/provider first
 - keep empty for the minimal sample
 
-## Healthcheck
+## Healthchecks
 
 ### Default rule
 Current rule:
@@ -266,9 +269,12 @@ Current rule:
 
 Example:
 ```json
-"healthcheck": {
-  "type": "process"
-}
+"healthchecks": [
+  {
+    "id": "process-ready",
+    "type": "process"
+  }
+]
 ```
 
 This is the right default for a simple sample service.
@@ -289,9 +295,12 @@ Use when:
 
 Sample:
 ```json
-"healthcheck": {
-  "type": "process"
-}
+"healthchecks": [
+  {
+    "id": "process-ready",
+    "type": "process"
+  }
+]
 ```
 
 ### `http` healthcheck
@@ -300,11 +309,14 @@ Use when:
 
 Sample:
 ```json
-"healthcheck": {
-  "type": "http",
-  "url": "http://localhost:${SERVICE_PORT}/health",
-  "expected_status": 200
-}
+"healthchecks": [
+  {
+    "id": "http-ready",
+    "type": "http",
+    "url": "http://localhost:${SERVICE_PORT}/health",
+    "expected_status": 200
+  }
+]
 ```
 
 ### `tcp` healthcheck
@@ -313,9 +325,12 @@ Use when:
 
 Sample:
 ```json
-"healthcheck": {
-  "type": "tcp"
-}
+"healthchecks": [
+  {
+    "id": "tcp-ready",
+    "type": "tcp"
+  }
+]
 ```
 
 Current donor behavior suggests this relies on the configured service host/port.
@@ -326,10 +341,13 @@ Use when:
 
 Sample:
 ```json
-"healthcheck": {
-  "type": "file",
-  "file": "${SERVICE_HOME}/.state/runtime/ready.txt"
-}
+"healthchecks": [
+  {
+    "id": "ready-file",
+    "type": "file",
+    "file": "${SERVICE_HOME}/.state/runtime/ready.txt"
+  }
+]
 ```
 
 ### `variable` healthcheck
@@ -338,10 +356,13 @@ Use when:
 
 Sample:
 ```json
-"healthcheck": {
-  "type": "variable",
-  "variable": "${SERVICE_URL}"
-}
+"healthchecks": [
+  {
+    "id": "service-url-ready",
+    "type": "variable",
+    "variable": "${SERVICE_URL}"
+  }
+]
 ```
 
 ## Other important manifest aspects
@@ -390,7 +411,7 @@ The minimal sample does not use this yet.
 - exact numeric meaning of `servicetype`
 - exact numeric meaning of `servicelocation`
 - final exact schema shape for all optional `execconfig` fields
-- final exact health schema normalization
+- final exact health evaluation semantics
 - final exact release artifact conventions across all service types
 
 ## Recommended authoring guidance

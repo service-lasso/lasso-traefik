@@ -371,11 +371,14 @@
       }
     ]
   },
-  "healthcheck": {
-    "type": "http",
-    "url": "${endpoint.ping.url}",
-    "expected_status": 200,
-    "retries": 80,
-    "interval": 250
-  }
+  "healthchecks": [
+    {
+      "id": "traefik-ping",
+      "type": "http",
+      "url": "${endpoint.ping.url}",
+      "expected_status": 200,
+      "retries": 80,
+      "interval": 250
+    }
+  ]
 }
