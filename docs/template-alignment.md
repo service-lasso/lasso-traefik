@@ -25,7 +25,7 @@ The copied `docs/reference/` material remains intentionally close to `service-te
 
 The following files intentionally differ from the sample template service:
 
-- `service.json` declares the `@traefik` service id, Traefik routes/ports/env/globalenv, release artifact metadata, generated runtime config, and HTTP `/ping` readiness.
+- `service.json` declares the `@traefik` service id, Traefik `endpoints[]` for route bindings and URLs, env/globalenv selector projections, release artifact metadata, generated runtime config, and HTTP `/ping` readiness.
 - `package.json` is present because this service packages upstream Traefik release assets with Node scripts.
 - `scripts/package.mjs` downloads the selected upstream Traefik release asset for the target platform and creates the Service Lasso release archive.
 - `scripts/verify.mjs` packages Traefik, extracts the archive, validates manifest invariants, starts Traefik with generated config, checks `/ping`, and shuts it down.

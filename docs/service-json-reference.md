@@ -12,7 +12,7 @@ It is meant to make the template usable without forcing service authors to recon
 - common top-level fields
 - `actions`
 - `execconfig`
-- env / dependencies / ports
+- env / dependencies / canonical `endpoints[]`
 - healthcheck direction
 - examples
 - what is currently canonical vs still illustrative
@@ -353,15 +353,18 @@ Current broader Service Lasso direction includes:
 
 The sample template keeps this minimal for now.
 
-### Ports and URLs
-Donor material shows additional fields such as:
+### Endpoints, legacy ports, and URLs
+
+Current package authoring should use canonical `endpoints[]` entries for service interfaces and URL resources. Environment, global environment, command lines, generated config, and health checks should reference those entries with selectors such as `${endpoint.web.port}` or `${endpoint.dashboard.url}`.
+
+Legacy donor material may still show fields such as:
 - `serviceportsecondary`
 - `serviceportconsole`
 - `serviceportdebug`
 - `portmapping`
 - `urls`
 
-These are not all used in the minimal sample, but they remain relevant for more complex services.
+These fields are migration context, not the preferred authoring surface for new package manifests.
 
 ### Runtime-provider relationships
 Donor material also shows patterns such as:

@@ -157,20 +157,41 @@ const expectedPorts = {
   mongo: 19160,
   typedb: 19170,
 };
-const expectedPortmapping = {
-  HTTP: "${WEB_PORT}",
-  HTTPS: "${WEBSECURE_PORT}",
-  HTTPS_TRAEFIK: "${HTTPS_TRAEFIK_PORT}",
-  HTTPS_NGINX: "${HTTPS_NGINX_PORT}",
-  HTTPS_CMS: "${HTTPS_CMS_PORT}",
-  HTTPS_FLOW: "${HTTPS_FLOW_PORT}",
-  HTTPS_FLOWTMS: "${HTTPS_FLOWTMS_PORT}",
-  HTTPS_API: "${HTTPS_API_PORT}",
-  HTTPS_FILES: "${HTTPS_FILES_PORT}",
-  HTTPS_BPMN: "${HTTPS_BPMN_PORT}",
-  TCP_MOGNO: "${MONGO_PORT}",
-  TCP_TYPEDB: "${TYPEDB_PORT}",
+const expectedEndpointProtocols = {
+  web: "http",
+  websecure: "https",
+  admin: "http",
+  https_traefik: "https",
+  https_nginx: "https",
+  https_cms: "https",
+  https_flow: "https",
+  https_flowtms: "https",
+  https_api: "https",
+  https_files: "https",
+  https_bpmn: "https",
+  mongo: "tcp",
+  typedb: "tcp",
 };
+const expectedUrlEndpoints = {
+  dashboard: {
+    target: "admin",
+    url: "http://${endpoint.admin.bind}:${endpoint.admin.port}/dashboard/",
+    primary: true,
+  },
+  ping: {
+    target: "admin",
+    url: "http://${endpoint.admin.bind}:${endpoint.admin.port}/ping",
+  },
+  web_url: {
+    target: "web",
+    url: "http://${endpoint.web.bind}:${endpoint.web.port}/",
+  },
+  websecure_url: {
+    target: "websecure",
+    url: "https://${endpoint.websecure.bind}:${endpoint.websecure.port}/",
+  },
+};
+const expectedEndpointIds = [...Object.keys(expectedPorts), ...Object.keys(expectedUrlEndpoints)];
 const resolvedPorts = Object.fromEntries(
   await Promise.all(Object.keys(expectedPorts).map(async (name) => [name, await reserveLoopbackPort()])),
 );
@@ -178,7 +199,7 @@ const adminPort = resolvedPorts.admin;
 
 if (
   serviceManifest.healthcheck?.type !== "http" ||
-  serviceManifest.healthcheck.url !== "http://127.0.0.1:${ADMIN_PORT}/ping" ||
+  serviceManifest.healthcheck.url !== "${endpoint.ping.url}" ||
   serviceManifest.healthcheck.expected_status !== 200
 ) {
   throw new Error(`Traefik service.json must declare HTTP /ping readiness: ${JSON.stringify(serviceManifest.healthcheck)}`);
@@ -189,38 +210,86 @@ if (JSON.stringify(serviceManifest.depend_on) !== JSON.stringify(["localcert", "
 }
 
 const expectedEnv = {
-  TRAEFIK_HTTP_PORT: "${WEB_PORT}",
-  TRAEFIK_HTTPS_PORT: "${WEBSECURE_PORT}",
-  TRAEFIK_INTERNAL_PORT: "${ADMIN_PORT}",
-  TRAEFIK_HTTPS_TRAEFIK_PORT: "${HTTPS_TRAEFIK_PORT}",
-  TRAEFIK_HTTPS_NGINX_PORT: "${HTTPS_NGINX_PORT}",
-  TRAEFIK_HTTPS_CMS_PORT: "${HTTPS_CMS_PORT}",
-  TRAEFIK_HTTPS_FLOW_PORT: "${HTTPS_FLOW_PORT}",
-  TRAEFIK_HTTPS_FLOWTMS_PORT: "${HTTPS_FLOWTMS_PORT}",
-  TRAEFIK_HTTPS_API_PORT: "${HTTPS_API_PORT}",
-  TRAEFIK_HTTPS_FILES_PORT: "${HTTPS_FILES_PORT}",
-  TRAEFIK_HTTPS_BPMN_PORT: "${HTTPS_BPMN_PORT}",
-  TRAEFIK_MONGO_PORT: "${MONGO_PORT}",
-  TRAEFIK_TYPEDB_PORT: "${TYPEDB_PORT}",
-  TRAEFIK_WEB_URL: "http://127.0.0.1:${WEB_PORT}/",
-  TRAEFIK_WEBSECURE_URL: "https://127.0.0.1:${WEBSECURE_PORT}/",
-  TRAEFIK_DASHBOARD_URL: "http://127.0.0.1:${ADMIN_PORT}/dashboard/",
-  TRAEFIK_PING_URL: "http://127.0.0.1:${ADMIN_PORT}/ping",
+  HTTP: "${endpoint.web.port}",
+  HTTPS: "${endpoint.websecure.port}",
+  HTTPS_TRAEFIK: "${endpoint.https_traefik.port}",
+  HTTPS_NGINX: "${endpoint.https_nginx.port}",
+  HTTPS_CMS: "${endpoint.https_cms.port}",
+  HTTPS_FLOW: "${endpoint.https_flow.port}",
+  HTTPS_FLOWTMS: "${endpoint.https_flowtms.port}",
+  HTTPS_API: "${endpoint.https_api.port}",
+  HTTPS_FILES: "${endpoint.https_files.port}",
+  HTTPS_BPMN: "${endpoint.https_bpmn.port}",
+  TCP_MOGNO: "${endpoint.mongo.port}",
+  TCP_TYPEDB: "${endpoint.typedb.port}",
+  TRAEFIK_HTTP_PORT: "${endpoint.web.port}",
+  TRAEFIK_HTTPS_PORT: "${endpoint.websecure.port}",
+  TRAEFIK_INTERNAL_PORT: "${endpoint.admin.port}",
+  TRAEFIK_HTTPS_TRAEFIK_PORT: "${endpoint.https_traefik.port}",
+  TRAEFIK_HTTPS_NGINX_PORT: "${endpoint.https_nginx.port}",
+  TRAEFIK_HTTPS_CMS_PORT: "${endpoint.https_cms.port}",
+  TRAEFIK_HTTPS_FLOW_PORT: "${endpoint.https_flow.port}",
+  TRAEFIK_HTTPS_FLOWTMS_PORT: "${endpoint.https_flowtms.port}",
+  TRAEFIK_HTTPS_API_PORT: "${endpoint.https_api.port}",
+  TRAEFIK_HTTPS_FILES_PORT: "${endpoint.https_files.port}",
+  TRAEFIK_HTTPS_BPMN_PORT: "${endpoint.https_bpmn.port}",
+  TRAEFIK_MONGO_PORT: "${endpoint.mongo.port}",
+  TRAEFIK_TYPEDB_PORT: "${endpoint.typedb.port}",
+  TRAEFIK_WEB_URL: "${endpoint.web_url.url}",
+  TRAEFIK_WEBSECURE_URL: "${endpoint.websecure_url.url}",
+  TRAEFIK_DASHBOARD_URL: "${endpoint.dashboard.url}",
+  TRAEFIK_PING_URL: "${endpoint.ping.url}",
 };
 const expectedGlobalEnv = {
   ...expectedEnv,
-  TRAEFIK_TRAEFIK_URL: "http://127.0.0.1:${ADMIN_PORT}/dashboard/",
+  TRAEFIK_TRAEFIK_URL: "${endpoint.dashboard.url}",
   TRAEFIK_HOST_DOMAIN: "localhost",
   TRAEFIK_HOST_DOMAIN_URL: "localhost",
   TRAEFIK_HOST_DOMAIN_SUFFIX: "localhost",
 };
 
-if (JSON.stringify(serviceManifest.ports) !== JSON.stringify(expectedPorts)) {
-  throw new Error(`Traefik service.json ports drifted: ${JSON.stringify(serviceManifest.ports)}`);
+if ("ports" in serviceManifest || "portmapping" in serviceManifest || "urls" in serviceManifest) {
+  throw new Error("Traefik service.json must author endpoints[] instead of legacy ports, portmapping, or urls.");
 }
 
-if (JSON.stringify(serviceManifest.portmapping) !== JSON.stringify(expectedPortmapping)) {
-  throw new Error(`Traefik service.json portmapping drifted: ${JSON.stringify(serviceManifest.portmapping)}`);
+if (!Array.isArray(serviceManifest.endpoints)) {
+  throw new Error("Traefik service.json must declare endpoints[].");
+}
+
+const endpointsById = Object.fromEntries(serviceManifest.endpoints.map((endpoint) => [endpoint.id, endpoint]));
+if (JSON.stringify(Object.keys(endpointsById)) !== JSON.stringify(expectedEndpointIds)) {
+  throw new Error(`Traefik service.json endpoints drifted: ${JSON.stringify(Object.keys(endpointsById))}`);
+}
+
+for (const [id, portDefault] of Object.entries(expectedPorts)) {
+  const endpoint = endpointsById[id];
+  if (
+    endpoint?.kind !== "network" ||
+    endpoint.direction !== "inbound" ||
+    endpoint.transport !== "tcp" ||
+    endpoint.protocol !== expectedEndpointProtocols[id] ||
+    endpoint.bind !== "127.0.0.1" ||
+    endpoint.port?.default !== portDefault ||
+    endpoint.port?.strategy !== "preferred" ||
+    endpoint.exposure !== "local" ||
+    endpoint.required !== true
+  ) {
+    throw new Error(`Traefik network endpoint ${id} drifted: ${JSON.stringify(endpoint)}`);
+  }
+}
+
+for (const [id, expected] of Object.entries(expectedUrlEndpoints)) {
+  const endpoint = endpointsById[id];
+  if (
+    endpoint?.kind !== "url" ||
+    endpoint.target !== expected.target ||
+    endpoint.url !== expected.url ||
+    endpoint.exposure !== "local" ||
+    endpoint.required !== true ||
+    (expected.primary && endpoint.primary !== true)
+  ) {
+    throw new Error(`Traefik URL endpoint ${id} drifted: ${JSON.stringify(endpoint)}`);
+  }
 }
 
 if (JSON.stringify(serviceManifest.env) !== JSON.stringify(expectedEnv)) {
@@ -344,17 +413,17 @@ for (const requiredFlag of [
 }
 
 for (const selector of [
-  "${WEBSECURE_PORT}",
-  "${HTTPS_TRAEFIK_PORT}",
-  "${HTTPS_NGINX_PORT}",
-  "${HTTPS_CMS_PORT}",
-  "${HTTPS_FLOW_PORT}",
-  "${HTTPS_FLOWTMS_PORT}",
-  "${HTTPS_API_PORT}",
-  "${HTTPS_FILES_PORT}",
-  "${HTTPS_BPMN_PORT}",
-  "${MONGO_PORT}",
-  "${TYPEDB_PORT}",
+  "${endpoint.websecure.port}",
+  "${endpoint.https_traefik.port}",
+  "${endpoint.https_nginx.port}",
+  "${endpoint.https_cms.port}",
+  "${endpoint.https_flow.port}",
+  "${endpoint.https_flowtms.port}",
+  "${endpoint.https_api.port}",
+  "${endpoint.https_files.port}",
+  "${endpoint.https_bpmn.port}",
+  "${endpoint.mongo.port}",
+  "${endpoint.typedb.port}",
 ]) {
   if (!serviceManifest.config?.files?.[0]?.content?.includes(selector)) {
     throw new Error(`Traefik config is missing entrypoint selector ${selector}`);
@@ -392,6 +461,12 @@ const selectorValues = {
       String(value),
     ]),
   ),
+  ...Object.fromEntries(Object.entries(resolvedPorts).map(([name, value]) => [`endpoint.${name}.port`, String(value)])),
+  ...Object.fromEntries(Object.keys(resolvedPorts).map((name) => [`endpoint.${name}.bind`, "127.0.0.1"])),
+  "endpoint.dashboard.url": `http://127.0.0.1:${adminPort}/dashboard/`,
+  "endpoint.ping.url": `http://127.0.0.1:${adminPort}/ping`,
+  "endpoint.web_url.url": `http://127.0.0.1:${resolvedPorts.web}/`,
+  "endpoint.websecure_url.url": `https://127.0.0.1:${resolvedPorts.websecure}/`,
 };
 const renderedCommandline = commandline.replace(/\$\{([^}]+)\}/g, (match, key) => selectorValues[key] ?? match);
 const args = parseCommandlineArgs(renderedCommandline);
