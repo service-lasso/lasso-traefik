@@ -78,9 +78,9 @@ The service manifest declares:
 - generated Traefik static config under `runtime/traefik.yml`
 - a lightweight dynamic config placeholder under `runtime/dynamic.yml`
 - a protected Service Admin route fixture under `runtime/protected-serviceadmin.example.yml`
-- dashboard/ping, web/websecure, route, Mongo, and TypeDB entrypoint ports
-- Service Lasso `portmapping` labels for those service ports
-- local `env` and shared `globalenv` outputs for all Traefik service ports and URLs
+- canonical `endpoints[]` entries for dashboard/ping, web/websecure, route, Mongo, and TypeDB entrypoints
+- compatibility aliases in `env` and `globalenv` for legacy port labels such as `HTTP`, `HTTPS`, and `TCP_TYPEDB`
+- local `env` and shared `globalenv` outputs that project endpoint selectors such as `${endpoint.web.port}` and `${endpoint.dashboard.url}`
 - HTTP health for Service Lasso lifecycle readiness via the Traefik admin `/ping` endpoint
 
 The repo also includes a broader Traefik + ZITADEL SSO ingress contract fixture under `runtime/servicelasso-sso-ingress.example.yml`.
