@@ -2,32 +2,14 @@
 
 This is the canonical flow for creating Service Lasso service repos.
 
-## Non-negotiable order
+## Reader workflow
 
-1. Create the GitHub repo from `service-lasso/service-template` as a template.
-2. Clone the new GitHub repo locally.
-3. Only then rename/adapt the service files and implementation.
+For the canonical reader workflow for creating a release-backed service repository,
+see [Create the Release Repo](https://service-lasso.github.io/service-lasso/service-authoring/03-create-release-repo).
+It covers creating and verifying the template-origin repository, cloning its develop branch,
+and beginning the first focused adaptation issue and branch.
 
-Do **not** start from a local copy or another service repo and retrofit the template later.
-
-## GitHub template-first flow
-
-```powershell
-gh repo create service-lasso/<repo-name> \
-  --public \
-  --template service-lasso/service-template \
-  --description "<description>"
-
-git clone https://github.com/service-lasso/<repo-name>.git C:\projects\service-lasso\<repo-name>
-cd C:\projects\service-lasso\<repo-name>
-```
-
-Then create a focused issue and branch for the first adaptation work:
-
-```powershell
-gh issue create --repo service-lasso/<repo-name> --title "Bootstrap <service-id> from service template" --body "..."
-git checkout -b issue-1-bootstrap-<service>
-```
+Use that workflow before completing the component-specific adaptation requirements below.
 
 ## Required rename/adaptation checklist
 
